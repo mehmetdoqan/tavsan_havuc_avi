@@ -1,6 +1,6 @@
 🐰 Havuç Avı
 5-7 yaş arası çocuklar için tasarlanmış, kodlama mantığını oyunlaştıran eğlenceli bir tarayıcı oyunu.
-
+https://mehmetdoqan.github.io/tavsan_havuc_avi/index.html
 
 🎮 Oyun Hakkında
 Havuç Avı, küçük çocuklara sıralama (sequencing), algoritma ve problem çözme becerilerini eğlenceli bir şekilde kazandırmak için geliştirilmiştir. Oyuncu, tavşanı yön komutlarıyla yönlendirerek haritadaki tüm havuçları toplamaya çalışır.
