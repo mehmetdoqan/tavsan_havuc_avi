@@ -382,6 +382,16 @@
         <button class="tool-btn" id="tR" onclick="selTool('R')">🪨</button>
         <button class="tool-btn" id="tX" onclick="selTool('X')">❌</button>
       </div>
+      <div style="display:flex;gap:8px;flex-direction:column;padding:6px 10px 0;">
+        <div style="display:flex;gap:8px;">
+          <button class="save-btn" onclick="saveCurrentLevelToLocal()">💾 BU BÖLÜMÜ KAYDET</button>
+          <button class="save-btn" onclick="resetCurrentLevelFromLocal()">🔄 ORİJİNALE DÖN</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <button class="save-btn" onclick="exportAllLevelsToClipboard()">📤 TÜMÜNÜ KOPYALA (JSON)</button>
+          <button class="save-btn" onclick="importLevelsFromJSON()">📥 İÇE AKTAR (JSON)</button>
+        </div>
+      </div>
       <button class="save-btn" onclick="toggleEdit()">✅ KAYDET VE KAPAT</button>
     </div>
 
@@ -391,7 +401,7 @@
         <div style="font-size:30px;margin-bottom:6px">🔐</div>
         <h3 style="color:#2196F3;margin-bottom:6px;font-size:16px">Editör Şifresi</h3>
         <p style="color:#888;font-size:12px;margin-bottom:14px">Bu alan yalnızca öğretmenler içindir</p>
-        <input id="pwInput" class="pw-input" type="password" placeholder="••••••"
+        <input id="pwInput" class="pw-input" type="password" placeholder="••••"
           onkeydown="if(event.key==='Enter')checkPw()">
         <div id="pwErr" class="pw-err">❌ Yanlış şifre!</div>
         <div class="pw-btns">
@@ -758,7 +768,69 @@ function goNext() {
   if (G.cur<59) startLvl(G.cur+1); else goMap();
 }
 
+/* Persistence helpers: localStorage save/load/export/import */
+var ORIGINAL_LVLS = null;
+var LS_KEY = 'havuc_lvls_v1';
+
+function saveCurrentLevelToLocal(){
+  try{
+    var saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    saved[G.cur] = G.lvls[G.cur];
+    localStorage.setItem(LS_KEY, JSON.stringify(saved));
+    alert('Bölüm yerel olarak kaydedildi.');
+  }catch(e){ alert('Kaydetme başarısız: '+(e.message||e)); }
+}
+
+function resetCurrentLevelFromLocal(){
+  try{
+    var saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    if(saved && saved.hasOwnProperty(G.cur)){
+      delete saved[G.cur];
+      localStorage.setItem(LS_KEY, JSON.stringify(saved));
+    }
+    if(ORIGINAL_LVLS && ORIGINAL_LVLS[G.cur]) G.lvls[G.cur] = JSON.parse(JSON.stringify(ORIGINAL_LVLS[G.cur]));
+    startLvl(G.cur);
+    alert('Bölüm orijinale döndürüldü.');
+  }catch(e){ alert('Sıfırlama başarısız: '+(e.message||e)); }
+}
+
+function exportAllLevelsToClipboard(){
+  try{
+    var txt = JSON.stringify(G.lvls);
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){ alert('Tüm bölümler kopyalandı (JSON).'); }, function(){ prompt('Kopyalama desteklenmiyor. Aşağıdaki JSON\'u kopyalayın:', txt); });
+    } else { prompt('Aşağıdaki JSON\'u kopyalayın:', txt); }
+  }catch(e){ alert('Dışa aktarma başarısız: '+(e.message||e)); }
+}
+
+function importLevelsFromJSON(){
+  try{
+    var txt = prompt('JSON yapıştırın (tüm bölümler):');
+    if(!txt) return;
+    var parsed = JSON.parse(txt);
+    if(!Array.isArray(parsed) || parsed.length<1){ alert('Geçersiz format. Lütfen bir dizi (array) yapıştırın.'); return; }
+    G.lvls = parsed;
+    drawMap();
+    startLvl(0);
+    alert('Bölümler içe aktarıldı. İlk bölüme dönüldü.');
+  }catch(e){ alert('İçe aktarma başarısız: '+(e.message||e)); }
+}
+
+function loadSavedLevelsOnStart(){
+  try{
+    var saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    if(saved && typeof saved === 'object'){
+      Object.keys(saved).forEach(function(k){
+        var idx = parseInt(k,10);
+        if(!isNaN(idx) && saved[k]) G.lvls[idx] = saved[k];
+      });
+    }
+  }catch(e){}
+}
+
 mkLvls();
+ORIGINAL_LVLS = JSON.parse(JSON.stringify(G.lvls));
+loadSavedLevelsOnStart();
 drawMap();
 </script>
 </body>
